@@ -1,7 +1,8 @@
 require 'fourflusher'
 require 'xcpretty'
 
-CONFIGURATION = "Release"
+Pod::UI.puts "BangNT: changed configuration to Debug to support build for testing import @testable"
+CONFIGURATION = "Debug"
 PLATFORMS = { 'iphonesimulator' => 'iOS',
               'appletvsimulator' => 'tvOS',
               'watchsimulator' => 'watchOS' }
