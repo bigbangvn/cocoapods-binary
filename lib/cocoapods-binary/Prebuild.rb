@@ -89,13 +89,14 @@ module Pod
             end
         end
 
+        # Input 2 array of string of library names
         def write_delta_file(updated, deleted)
             if !updated.empty? || !deleted.empty?
                 create_dir_if_needed(delta_dir)
                 filePath = delta_file_path
                 File.open(filePath, 'w+') do |line|
-                    line.puts "Updated: #{updated.to_a}"
-                    line.puts "Deleted: #{deleted.to_a}" # TODO: when a lib is deleted, its dependencies are not listed here, where they are deleted?
+                    line.puts "Updated: #{updated}"
+                    line.puts "Deleted: #{deleted}"
                 end
                 UI.puts "Pod prebuild changes were wrote to file: #{filePath}"
             else
@@ -130,7 +131,6 @@ module Pod
                 end
 
                 root_names_to_update = (added + changed + missing)
-                write_delta_file(root_names_to_update, deleted)
 
                 # transform names to targets
                 cache = []
@@ -147,7 +147,6 @@ module Pod
                 targets = (targets + dependency_targets).uniq
             else
                 UI.puts "Rebuild all frameworks"
-                mark_delta_file_update_all
                 targets = self.pod_targets
             end
 
@@ -260,6 +259,12 @@ module Pod
             
 
 
+
+            updatedTargetNames = targets.map { |i| "#{i.label}" }
+            Pod::UI.puts "Targets to prebuild: #{updatedTargetNames}"
+            deletedTargetNames = useless_target_names.map { |i| "#{i}" }
+            Pod::UI.puts "Targets to cleanup: #{deletedTargetNames}"
+            write_delta_file(updatedTargetNames, deletedTargetNames)
         end
         
         
