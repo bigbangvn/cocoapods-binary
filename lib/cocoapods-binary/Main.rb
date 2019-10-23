@@ -114,6 +114,7 @@ Pod::HooksManager.register('cocoapods-binary', :pre_install) do |installer_conte
     }
     
     # control features
+    Pod::UI.puts "control features"
     Pod.is_prebuild_stage = true
     Pod::Podfile::DSL.enable_prebuild_patch true  # enable sikpping for prebuild targets
     Pod::Installer.force_disable_integration true # don't integrate targets
@@ -121,19 +122,24 @@ Pod::HooksManager.register('cocoapods-binary', :pre_install) do |installer_conte
     Pod::Installer.disable_install_complete_message true # disable install complete message
     
     # make another custom sandbox
+    Pod::UI.puts "make another custom sandbox"
     standard_sandbox = installer_context.sandbox
     prebuild_sandbox = Pod::PrebuildSandbox.from_standard_sandbox(standard_sandbox)
     
     # get the podfile for prebuild
+    Pod::UI.puts "get the podfile for prebuild"
     prebuild_podfile = Pod::Podfile.from_ruby(podfile.defined_in_file)
     
     # install
     lockfile = installer_context.lockfile
     binary_installer = Pod::Installer.new(prebuild_sandbox, prebuild_podfile, lockfile)
     
+    binary_installer.clean_delta_file
     if binary_installer.have_exact_prebuild_cache? && !update
+        Pod::UI.puts "cache hit"
         binary_installer.install_when_cache_hit!
     else
+        Pod::UI.puts "cache miss -> need to update"
         binary_installer.update = update
         binary_installer.repo_update = repo_update
         binary_installer.install!

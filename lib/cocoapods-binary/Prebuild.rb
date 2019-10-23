@@ -1,7 +1,7 @@
 require_relative 'rome/build_framework'
 require_relative 'helper/passer'
 require_relative 'helper/target_checker'
-
+require "fileutils"
 
 # patch prebuild ability
 module Pod
@@ -63,9 +63,49 @@ module Pod
             end
         end
     
+        def delta_dir
+            return "#{sandbox.root}/../_Prebuild_delta"
+        end
+
+        def delta_file_path
+            return "#{delta_dir}/changes.txt"
+        end
+
+        def clean_delta_file
+            UI.puts "clean_delta_file"
+            system("rm -f #{delta_file_path}")
+        end
+
+        def create_dir_if_needed(dir)
+            if !File.exist?(dir)
+                FileUtils.mkdir_p dir
+            end
+        end
+
+        def mark_delta_file_update_all
+            create_dir_if_needed(delta_dir)
+            File.open(delta_file_path, 'w+') do |line|
+                line.puts "RebuildAll"
+            end
+        end
+
+        def write_delta_file(updated, deleted)
+            if !updated.empty? || !deleted.empty?
+                create_dir_if_needed(delta_dir)
+                filePath = delta_file_path
+                File.open(filePath, 'w+') do |line|
+                    line.puts "Updated: #{updated.to_a}"
+                    line.puts "Deleted: #{deleted.to_a}" # TODO: when a lib is deleted, its dependencies are not listed here, where they are deleted?
+                end
+                UI.puts "Pod prebuild changes were wrote to file: #{filePath}"
+            else
+                UI.puts "No changes in prebuild"
+            end
+        end
 
         # Build the needed framework files
         def prebuild_frameworks! 
+            UI.puts "Start prebuild_frameworks"
 
             # build options
             sandbox_path = sandbox.root
@@ -74,7 +114,7 @@ module Pod
             targets = []
             
             if local_manifest != nil
-
+                UI.puts "Update some frameworks"
                 changes = prebuild_pods_changes
                 added = changes.added
                 changed = changes.changed 
@@ -89,8 +129,8 @@ module Pod
                     not exsited_framework_pod_names.include?(pod_name)
                 end
 
-
                 root_names_to_update = (added + changed + missing)
+                write_delta_file(root_names_to_update, deleted)
 
                 # transform names to targets
                 cache = []
@@ -106,6 +146,8 @@ module Pod
                 dependency_targets = targets.map {|t| t.recursive_dependent_targets }.flatten.uniq || []
                 targets = (targets + dependency_targets).uniq
             else
+                UI.puts "Rebuild all frameworks"
+                mark_delta_file_update_all
                 targets = self.pod_targets
             end
 
@@ -195,6 +237,7 @@ module Pod
                 all_needed_names.include? name
             end
             useless_target_names.each do |name|
+                UI.puts "Remove: #{name}"
                 path = sandbox.framework_folder_path_for_target_name(name)
                 path.rmtree if path.exist?
             end

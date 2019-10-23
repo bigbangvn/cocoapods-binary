@@ -127,6 +127,7 @@ module Pod
                 next if self.sandbox.local?(root_name)
 
                 # delete the cached files
+                UI.puts "Delete cached files: #{root_name}"
                 target_path = self.sandbox.pod_dir(root_name)
                 target_path.rmtree if target_path.exist?
 
