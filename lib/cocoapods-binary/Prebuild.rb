@@ -36,6 +36,7 @@ module Pod
 
         # check if need to prebuild
         def have_exact_prebuild_cache?
+            UI.puts "Manifest: #{local_manifest.inspect}"
             # check if need build frameworks
             return false if local_manifest == nil
             
@@ -50,6 +51,10 @@ module Pod
                 not exsited_framework_pod_names.include?(pod_name)
             end
 
+            UI.puts "Added frameworks: #{added.to_a}"
+            UI.puts "Changed frameworks: #{changed.to_a}"
+            UI.puts "Deleted frameworks: #{deleted.to_a}"
+            UI.puts "Missing frameworks: #{missing.to_a}"
             needed = (added + changed + deleted + missing)
             return needed.empty?
         end

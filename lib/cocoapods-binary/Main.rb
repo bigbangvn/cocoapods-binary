@@ -135,6 +135,7 @@ Pod::HooksManager.register('cocoapods-binary', :pre_install) do |installer_conte
     binary_installer = Pod::Installer.new(prebuild_sandbox, prebuild_podfile, lockfile)
     
     binary_installer.clean_delta_file
+    Pod::UI.puts "Pod update = #{update}"
     if binary_installer.have_exact_prebuild_cache? && !update
         Pod::UI.puts "cache hit"
         binary_installer.install_when_cache_hit!
