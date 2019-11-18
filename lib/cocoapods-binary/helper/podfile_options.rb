@@ -14,17 +14,17 @@ module Pod
             should_prebuild = Pod::Podfile::DSL.prebuild_all
 
             options = requirements.last
-            if options.is_a?(Hash) && options[Pod::Prebuild.keyword] != nil 
+            if options.is_a?(Hash) && options[Pod::Prebuild.keyword] != nil
                 should_prebuild = options.delete(Pod::Prebuild.keyword)
                 requirements.pop if options.empty?
             end
-    
+
             pod_name = Specification.root_name(name)
             set_prebuild_for_pod(pod_name, should_prebuild)
         end
-        
+
         def set_prebuild_for_pod(pod_name, should_prebuild)
-            
+
             if should_prebuild == true
                 @prebuild_framework_pod_names ||= []
                 @prebuild_framework_pod_names.push pod_name
@@ -42,15 +42,16 @@ module Pod
             names
         end
         def should_not_prebuild_framework_pod_names
-            names = @should_not_prebuild_framework_pod_names || []
-            if parent != nil and parent.kind_of? TargetDefinition
-                names += parent.should_not_prebuild_framework_pod_names
-            end
-            names
+            []
+            # names = @should_not_prebuild_framework_pod_names || []
+            # if parent != nil and parent.kind_of? TargetDefinition
+            #     names += parent.should_not_prebuild_framework_pod_names
+            # end
+            # names
         end
 
         # ---- patch method ----
-        # We want modify `store_pod` method, but it's hard to insert a line in the 
+        # We want modify `store_pod` method, but it's hard to insert a line in the
         # implementation. So we patch a method called in `store_pod`.
         old_method = instance_method(:parse_inhibit_warnings)
 
@@ -58,7 +59,7 @@ module Pod
           parse_prebuild_framework(name, requirements)
           old_method.bind(self).(name, requirements)
         end
-        
+
       end
     end
 end
@@ -79,26 +80,27 @@ module Pod
                 # filter prebuild
                 prebuild_names = target_definition.prebuild_framework_pod_names
                 if not Podfile::DSL.prebuild_all
-                    targets = targets.select { |pod_target| prebuild_names.include?(pod_target.pod_name) } 
+                    targets = targets.select { |pod_target| prebuild_names.include?(pod_target.pod_name) }
                 end
                 dependency_targets = targets.map {|t| t.recursive_dependent_targets }.flatten.uniq || []
                 targets = (targets + dependency_targets).uniq
 
                 # filter should not prebuild
                 explict_should_not_names = target_definition.should_not_prebuild_framework_pod_names
-                targets = targets.reject { |pod_target| explict_should_not_names.include?(pod_target.pod_name) } 
+                puts "explict_should_not_names: #{explict_should_not_names}"
+                targets = targets.reject { |pod_target| explict_should_not_names.include?(pod_target.pod_name) }
 
                 all += targets
             end
-
-            all = all.reject {|pod_target| sandbox.local?(pod_target.pod_name) }
+            puts "alls before reject: #{all}"
+            #all = all.reject {|pod_target| sandbox.local?(pod_target.pod_name) }
             all.uniq
             )
         end
 
         # the root names who needs prebuild, including dependency pods.
-        def prebuild_pod_names 
-           @prebuild_pod_names ||= self.prebuild_pod_targets.map(&:pod_name)
+        def prebuild_pod_names
+           @prebuild_pod_names = ['MyPod2'] # ||= self.prebuild_pod_targets.map(&:pod_name)
         end
 
 
