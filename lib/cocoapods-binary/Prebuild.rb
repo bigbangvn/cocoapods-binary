@@ -83,14 +83,7 @@ module Pod
             end
         end
 
-        def mark_delta_file_update_all
-            create_dir_if_needed(delta_dir)
-            File.open(delta_file_path, 'w+') do |line|
-                line.puts "RebuildAll"
-            end
-        end
-
-        # Input 2 array of string of library names
+        # Input 2 array of strings, each one is a library name
         def write_delta_file(updated, deleted)
             if !updated.empty? || !deleted.empty?
                 create_dir_if_needed(delta_dir)
