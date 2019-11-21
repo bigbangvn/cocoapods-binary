@@ -37,9 +37,10 @@ module Pod
                     local = (options[:path] != nil)
                 end
 
-                #if should_prebuild # and (not local) bangnt: allow local pod
+                # bangnt: remove if to enable prebuild everything. When building dev pod, we need workaround for their dependencies as in podspec file we can't specify s.dependency path => devpod folder
+                if should_prebuild # and (not local) bangnt: allow local pod
                     old_method.bind(self).(name, *args)
-                #end
+                end
             end
          end
     end

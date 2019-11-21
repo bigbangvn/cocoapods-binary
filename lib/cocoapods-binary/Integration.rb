@@ -4,7 +4,7 @@ require_relative 'helper/prebuild_sandbox'
 require_relative 'helper/passer'
 require_relative 'helper/names'
 require_relative 'helper/target_checker'
-
+require 'pry'
 
 # NOTE:
 # This file will only be loaded on normal pod install step
@@ -26,7 +26,7 @@ module Pod
                 #     puts "Not install: #{self.name}"
                 #     return
                 # end
-                puts "Installing: #{self.name}"
+                puts "install_for_prebuild: #{self.name}"
 
                 # make a symlink to target folder
                 prebuild_sandbox = Pod::PrebuildSandbox.from_standard_sandbox(standard_sanbox)
@@ -70,11 +70,16 @@ module Pod
                     target_folder.rmtree if target_folder.exist?
                     target_folder.mkpath
 
+                    if Dir[real_file_folder].empty?
+                        puts "Error: prebuild folder empty: #{real_file_folder}"
+                        exit false
+                    end
 
                     walk(real_file_folder) do |child|
                         source = child
                         # only make symlink to file and `.framework` folder
                         if child.directory? and [".framework", ".dSYM"].include? child.extname
+                            puts "Link framework: #{source} -> #{target_folder}"
                             mirror_with_symlink(source, real_file_folder, target_folder)
                             next false  # return false means don't go deeper
                         elsif child.file?
@@ -154,6 +159,9 @@ module Pod
 
             # call original
             old_method2.bind(self).()
+
+            # return
+
             # ...
             # ...
             # ...
@@ -170,6 +178,7 @@ module Pod
             cache = []
 
             def add_vendered_framework(spec, platform, added_framework_file_path)
+                puts "add_vendered_framework: #{spec.name} #{added_framework_file_path}"
                 if spec.attributes_hash[platform] == nil
                     spec.attributes_hash[platform] = {}
                 end
@@ -187,6 +196,8 @@ module Pod
                 end
             end
 
+
+            puts "prebuild_pod_names: #{prebuild_pod_names}"
 
             specs = self.analysis_result.specifications
             prebuilt_specs = (specs.select do |spec|
@@ -240,13 +251,16 @@ module Pod
             pod_installer = create_pod_installer(pod_name)
             # \copy from original
 
-            puts "All prebuilt pods: #{self.prebuild_pod_names}"
+            #puts "All prebuilt pods: #{self.prebuild_pod_names}"
 
-            if self.prebuild_pod_names.include? pod_name
+
+
+            if Dir.exist?("Pods/_Prebuild/GeneratedFrameworks/#{pod_name}") # self.prebuild_pod_names.include? pod_name
+                puts "Install prebuild: #{pod_name}"
                 pod_installer.install_for_prebuild!(self.sandbox)
             else
-                pod_installer.install!
                 puts "Normal install for: #{pod_name}"
+                pod_installer.install!
             end
 
             # copy from original

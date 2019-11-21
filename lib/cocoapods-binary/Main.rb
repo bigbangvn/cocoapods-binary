@@ -144,11 +144,10 @@ Pod::HooksManager.register('cocoapods-binary', :pre_install) do |installer_conte
         binary_installer.install_when_cache_hit!
     else
         Pod::UI.puts "cache miss -> need to update"
-        Pod::Podfile::DSL.enable_prebuild_patch false
         binary_installer.update = update
         binary_installer.repo_update = repo_update
         binary_installer.install!
-        Pod::Podfile::DSL.enable_prebuild_patch true
+        Pod::UI.puts "Finished binary install"
     end
 
 

@@ -82,6 +82,8 @@ module Pod
                 if not Podfile::DSL.prebuild_all
                     targets = targets.select { |pod_target| prebuild_names.include?(pod_target.pod_name) }
                 end
+
+                # Bangnt: Auto include dependencies - should we disable it?
                 dependency_targets = targets.map {|t| t.recursive_dependent_targets }.flatten.uniq || []
                 targets = (targets + dependency_targets).uniq
 
@@ -92,15 +94,157 @@ module Pod
 
                 all += targets
             end
-            puts "alls before reject: #{all}"
-            #all = all.reject {|pod_target| sandbox.local?(pod_target.pod_name) }
+            #puts "alls before reject: #{all}"
+            #all = all.reject {|pod_target| sandbox.local?(pod_target.pod_name) } # testing build dev pod only
+            puts "after filtering: #{all}"
+
+            dev_pods = all.map(&:pod_name).reject { |name| !sandbox.local?(name) }
+            puts "All dev pods: #{dev_pods}"
+
             all.uniq
             )
         end
 
         # the root names who needs prebuild, including dependency pods.
         def prebuild_pod_names
-           @prebuild_pod_names = ['MyPod2'] # ||= self.prebuild_pod_targets.map(&:pod_name)
+
+            localResourcesTargets = [
+                'CommonResources',
+                'DriverExperienceResources',
+                'FoodResources',
+                'ExpressResources',
+                'TransportResources',
+                'PaymentResources',
+                'EconResources',
+                'LendingResources',
+                'GeoResources'
+            ]
+            issueTargets = ['Crashlytics', 'Fabric']
+
+            # We don't build some pod libs because of issue or they are too small
+            # HMSegmentedControl not used -> remove
+            podsBlackList = ['UIColor_Hex_Swift', 'SwiftyUserDefaults', 'SwiftLint', 'Sourcery', 'ReachabilitySwift', 'objc-geohash', 'NSLogger', 'NearbyMessages', 'MSREventBridge', 'GzipSwift', 'GrabIcon-IOS', 'GoogleToolboxForMac',
+            'Firebase', 'DRDPluginResources', 'Cuckoo', 'CTCheckbox', 'Crashlytics', 'BKMoneyKit', 'VoipKit']
+
+            devpodWhiteList = [
+                'ExpressModule',
+                'JobFlowData',
+
+                'ABTestingData',
+                'ABTestingService',
+                'AdvanceJobModule',
+                'AnalyticsService',
+                'AnalyticsTracker',
+                'AutoAcceptService',
+                'AvailabilityService',
+                'BaseKIFTest',
+                'BaseModule',
+                'ChatService',
+                'DaxHistoryModule',
+                'DaxHistoryService',
+                'DaxRatePaxModule',
+                'DaxReferDaxModule',
+                'DaxReferDaxService',
+                'DaxReferDaxTracker',
+                'DaxSecurity',
+                'DaxTippingService',
+                'DeliveriesCommon',
+                'DevicesService',
+                'DiagnosticTools',
+                'DiscoveryHub',
+                'DriverBaseModule',
+                'DriverChoiceModule',
+                'DriverChoiceService',
+                'DriverCoreData',
+                'DriverCoreService',
+                'DriverQualityService',
+                'DriverSafety',
+                'DriverSafetyService',
+
+                'DriverService',
+                'DriverTestsCommon',
+                'DriverTestsMock',
+                'EarningsModule',
+                'ExperimentService',
+                'ExpressModule',
+                'FaceAuthenticationModule',
+                'FaceAuthenticationService',
+                'FakeDependencies',
+                'FavLocationSearchModule',
+                'FavLocationService',
+                'FeedbackService',
+                'FoodModule',
+                'FoundationCommons',
+                'GenericDataSource',
+                'GrabLogger',
+                'GrabNowModule',
+                'GrabnowService',
+                'HeatmapModule',
+                'HeatMapService',
+                'HedwigInAppMessagingService',
+                'HedwigInboxService',
+                'HedwigNotificationService',
+                'InboxModule',
+                'IncentivesModule',
+                'IncentivesService',
+                'InsuranceModule',
+                'InsuranceService',
+                'InTransitFlowModule',
+                'JobCardModule',
+                'JobCardUICommons',
+                'JobFlowData',
+                'JobFlowService',
+                'JsonTools',
+                'Lending',
+                'LendingService',
+                'LivenessDetection',
+                'LocationService',
+                'LoginModule',
+                'MapModule',
+                'MGActionLiveness',
+                'MGActionLivenessUI',
+                'MGBaseKit',
+                'MGFaceIDLicense',
+                'MLeaksFinder',
+                'MultiVehiclesModule',
+                'NetworkUtil',
+                'NotificationsService',
+                'PartnerBenefitsModule',
+                'PartnerBenefitsService',
+                'PartnerBenefitsV2',
+                'PartnerBenefitsV2Service',
+                'PaymentService',
+                'PDRMModule',
+                'PhoneContactsModule',
+                'PhoneNumberKit',
+                'PluginKit',
+                'ProfileService',
+                'ProfileSettingsModule',
+                'QuickDrawerModule',
+                'RxCocoaExtensions',
+                'SafetyTripMonitoring',
+                'SnapshotTestToolModule',
+                'Stubber',
+                'SupportModule',
+                'SuspensionExpModule',
+                'TestExtensions',
+                'TestToolModule',
+                'TopUpPaxModule',
+                'TopUpPaxService',
+                'TransitCommonsModule',
+                'TransportModule',
+                'TZStackView',
+                'UICommons',
+                'UserSettingsModule',
+                'VehicleTypesData',
+                'VehicleTypesService',
+                'VoIPModule',
+                'WalletModule',
+                'WebSandboxModule'
+            ]
+
+            # Bang: testing issue for duplicated vendor
+           @prebuild_pod_names ||= self.prebuild_pod_targets.map(&:pod_name).reject { |name| localResourcesTargets.include?(name) || issueTargets.include?(name) || podsBlackList.include?(name) }.reject { |name| sandbox.local?(name) && !devpodWhiteList.include?(name) }
         end
 
 
