@@ -52,6 +52,11 @@ module Pod
             end
 
             needed = (added + changed + deleted + missing)
+
+            ignore_pods = Set.new(Prebuild::DaxIOSWorkaround.localResourcesTargets + Prebuild::DaxIOSWorkaround.issueTargets + Prebuild::DaxIOSWorkaround.podsBlackList)
+            needed = needed.reject { |name| ignore_pods.include?(name) }
+            puts "needed rebuild: #{needed.to_a}"
+
             return needed.empty?
         end
 
@@ -148,124 +153,7 @@ module Pod
             # targets = targets.reject {|pod_target| sandbox.local?(pod_target.pod_name) }
             targets = targets.reject { |pod_target| Dir.exist?("Pods/_Prebuild/GeneratedFrameworks/#{pod_target.pod_name}") }
 
-            devpodWhiteList = [
-                'ExpressModule',
-                'JobFlowData',
-
-                'ABTestingData',
-                'ABTestingService',
-                'AdvanceJobModule',
-                'AnalyticsService',
-                'AnalyticsTracker',
-                'AutoAcceptService',
-                'AvailabilityService',
-                'BaseKIFTest',
-                'BaseModule',
-                'ChatService',
-                'DaxHistoryModule',
-                'DaxHistoryService',
-                'DaxRatePaxModule',
-                'DaxReferDaxModule',
-                'DaxReferDaxService',
-                'DaxReferDaxTracker',
-                'DaxSecurity',
-                'DaxTippingService',
-                'DeliveriesCommon',
-                'DevicesService',
-                'DiagnosticTools',
-                'DiscoveryHub',
-                'DriverBaseModule',
-                'DriverChoiceModule',
-                'DriverChoiceService',
-                'DriverCoreData',
-                'DriverCoreService',
-                'DriverQualityService',
-                'DriverSafety',
-                'DriverSafetyService',
-
-                'DriverService',
-                'DriverTestsCommon',
-                'DriverTestsMock',
-                'EarningsModule',
-                'ExperimentService',
-                'ExpressModule',
-                'FaceAuthenticationModule',
-                'FaceAuthenticationService',
-                'FakeDependencies',
-                'FavLocationSearchModule',
-                'FavLocationService',
-                'FeedbackService',
-                'FoodModule',
-                'FoundationCommons',
-                'GenericDataSource',
-                'GrabLogger',
-                'GrabNowModule',
-                'GrabnowService',
-                'HeatmapModule',
-                'HeatMapService',
-                'HedwigInAppMessagingService',
-                'HedwigInboxService',
-                'HedwigNotificationService',
-                'InboxModule',
-                'IncentivesModule',
-                'IncentivesService',
-                'InsuranceModule',
-                'InsuranceService',
-                'InTransitFlowModule',
-                'JobCardModule',
-                'JobCardUICommons',
-                'JobFlowData',
-                'JobFlowService',
-                'JsonTools',
-                'Lending',
-                'LendingService',
-                'LivenessDetection',
-                'LocationService',
-                'LoginModule',
-                'MapModule',
-                'MGActionLiveness',
-                'MGActionLivenessUI',
-                'MGBaseKit',
-                'MGFaceIDLicense',
-                'MLeaksFinder',
-                'MultiVehiclesModule',
-                'NetworkUtil',
-                'NotificationsService',
-                'PartnerBenefitsModule',
-                'PartnerBenefitsService',
-                'PartnerBenefitsV2',
-                'PartnerBenefitsV2Service',
-                'PaymentService',
-                'PDRMModule',
-                'PhoneContactsModule',
-                'PhoneNumberKit',
-                'PluginKit',
-                'ProfileService',
-                'ProfileSettingsModule',
-                'QuickDrawerModule',
-                'RxCocoaExtensions',
-                'SafetyTripMonitoring',
-                'SnapshotTestToolModule',
-                'Stubber',
-                'SupportModule',
-                'SuspensionExpModule',
-                'TestExtensions',
-                'TestToolModule',
-                'TopUpPaxModule',
-                'TopUpPaxService',
-                'TransitCommonsModule',
-                'TransportModule',
-                'TZStackView',
-                'UICommons',
-                'UserSettingsModule',
-                'VehicleTypesData',
-                'VehicleTypesService',
-                'VoIPModule',
-                'WalletModule',
-                'WebSandboxModule'
-                ]
-
-            targets = targets.reject { |target| !devpodWhiteList.include?(target.pod_name) }
+            targets = targets.reject { |target| !Prebuild::DaxIOSWorkaround.devpodWhiteList.include?(target.pod_name) }
 
             target_names = targets.map(&:pod_name)
             puts "Targets to prebuild: #{target_names}"
