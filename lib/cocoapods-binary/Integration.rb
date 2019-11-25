@@ -4,7 +4,6 @@ require_relative 'helper/prebuild_sandbox'
 require_relative 'helper/passer'
 require_relative 'helper/names'
 require_relative 'helper/target_checker'
-require 'pry'
 
 # NOTE:
 # This file will only be loaded on normal pod install step
