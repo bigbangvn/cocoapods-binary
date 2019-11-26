@@ -112,7 +112,11 @@ def xcodebuild(sandbox, target, sdk='macosx', deployment_target=nil, other_optio
   platform = PLATFORMS[sdk]
   args += Fourflusher::SimControl.new.destination(:oldest, platform, deployment_target) unless platform.nil?
   args += other_options
-  log = `xcodebuild #{args.join(" ")} 2>&1`
+
+  args_str = args.join(" ")
+  cmd = "xcodebuild #{args_str} 2>&1"
+  puts "xcodebuild cmd = #{cmd}"
+  log = `#{cmd}`
   exit_code = $?.exitstatus  # Process::Status
   is_succeed = (exit_code == 0)
 
@@ -190,7 +194,7 @@ module Pod
 
     def self.remove_build_dir(sandbox_root)
       path = build_dir(sandbox_root)
-      path.rmtree if path.exist?
+      #path.rmtree if path.exist?
     end
 
     private

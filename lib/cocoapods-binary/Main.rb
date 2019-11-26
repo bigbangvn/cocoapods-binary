@@ -166,6 +166,8 @@ Pod::HooksManager.register('cocoapods-binary', :pre_install) do |installer_conte
     Pod::UI.puts "🤖  Pod Install"
     require_relative 'Integration'
     # go on the normal install step ...
+
+    Pod::UI.puts '🤖  Pod Install completed!'
 end
 
 Pod::HooksManager.register('cocoapods-binary', :post_install) do |installer_context|
@@ -175,8 +177,7 @@ Pod::HooksManager.register('cocoapods-binary', :post_install) do |installer_cont
     lockfile_path = "#{Pathname.new(installer_context.sandbox_root).parent.to_s}/Podfile.lock"
     puts lockfile_path
     lockfile = Pod::Lockfile.from_file Pathname.new(lockfile_path)
-    puts 'Lock file:'
-    puts lockfile
+    puts "Lock file: #{lockfile}"
 end
 
 
