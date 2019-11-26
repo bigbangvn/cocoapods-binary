@@ -19,11 +19,12 @@ def build_for_iosish_platform(sandbox,
                               simulator,
                               bitcode_enabled,
                               custom_build_options = [], # Array<String>
-                              custom_build_options_simulator = [] # Array<String>
+                              custom_build_options_simulator = [], # Array<String>
+                              enable_device_build = false
                               )
 
   deployment_target = target.platform.deployment_target.to_s
-puts "build_for_iosish_platform #{custom_build_options} #{custom_build_options_simulator}"
+  puts "build_for_iosish_platform #{custom_build_options} #{custom_build_options_simulator}"
   target_label = target.label # name with platform if it's used in multiple platforms
   Pod::UI.puts "Prebuilding #{target_label}..."
 
@@ -33,16 +34,22 @@ puts "build_for_iosish_platform #{custom_build_options} #{custom_build_options_s
   # make less arch to iphone simulator for faster build
   custom_build_options_simulator += ['ARCHS=x86_64', 'ONLY_ACTIVE_ARCH=NO'] if simulator == 'iphonesimulator'
 
-  is_succeed, _ = xcodebuild(sandbox, target_label, device, deployment_target, other_options + custom_build_options)
-  exit 1 unless is_succeed
-  is_succeed, _ = xcodebuild(sandbox, target_label, simulator, deployment_target, other_options + custom_build_options_simulator)
-  exit 1 unless is_succeed
-
   # paths
   target_name = target.name # equals target.label, like "AFNeworking-iOS" when AFNetworking is used in multiple platforms.
   module_name = target.product_module_name
   device_framework_path = "#{build_dir}/#{CONFIGURATION}-#{device}/#{target_name}/#{module_name}.framework"
   simulator_framework_path = "#{build_dir}/#{CONFIGURATION}-#{simulator}/#{target_name}/#{module_name}.framework"
+
+  is_succeed, _ = xcodebuild(sandbox, target_label, simulator, deployment_target, other_options + custom_build_options_simulator)
+  exit 1 unless is_succeed
+  
+  if enable_device_build
+    is_succeed, _ = xcodebuild(sandbox, target_label, device, deployment_target, other_options + custom_build_options)
+    exit 1 unless is_succeed
+  else
+    FileUtils.cp_r simulator_framework_path, output_path
+    return
+  end
 
   device_binary = device_framework_path + "/#{module_name}"
   simulator_binary = simulator_framework_path + "/#{module_name}"
