@@ -1,6 +1,7 @@
 # encoding: UTF-8
 require_relative 'helper/podfile_options'
 require_relative 'tool/tool'
+require_relative 'helper/passer'
 require 'pathname'
 
 module Pod
@@ -151,6 +152,7 @@ Pod::HooksManager.register('cocoapods-binary', :pre_install) do |installer_conte
     end
 
 
+
     # reset the environment
     Pod.is_prebuild_stage = false
     Pod::Installer.force_disable_integration false
@@ -172,6 +174,40 @@ end
 
 Pod::HooksManager.register('cocoapods-binary', :post_install) do |installer_context|
     puts 'Pod-binary post install hook'
+
+    # BangNguyen: Modify pods scheme to support code coverage
+    require 'rexml/document'
+
+    pod_proj_path = installer_context.sandbox.project_path
+    puts "Modify project_path: #{pod_proj_path}"
+    scheme_files = Dir["#{pod_proj_path}/**/*.xcscheme"]
+    scheme_files.each do |file_path|
+        scheme_name = File.basename(file_path, '.*')
+        if !Pod::Prebuild::DaxIOSWorkaround.devpodWhiteList.include?(scheme_name)
+            next
+        end
+        puts "Modify scheme to enable coverage symbol when prebuild: #{scheme_name}"
+
+        doc = File.open(file_path, 'r') do |f|
+            REXML::Document.new(f)
+        end
+        scheme = doc.elements['Scheme']
+        test_action = scheme.elements['TestAction']
+        if test_action.attributes['codeCoverageEnabled'] == 'YES'
+            next
+        end
+        test_action.add_attribute('codeCoverageEnabled', 'YES')
+        test_action.add_attribute('onlyGenerateCoverageForSpecifiedTargets', 'YES')
+        coverage_targets = REXML::Element.new('CodeCoverageTargets')
+        buildable_ref = scheme.elements['BuildAction'].elements['BuildActionEntries'].elements['BuildActionEntry'].elements['BuildableReference']
+        new_buildable_ref = buildable_ref.clone # Need to clone, otherwise the original one will be move to new place
+        coverage_targets.add_element(new_buildable_ref)
+        test_action.add_element(coverage_targets)
+
+        File.open(file_path, 'w') do |f|
+            doc.write(f)
+        end
+    end
 
     puts installer_context.sandbox
     lockfile_path = "#{Pathname.new(installer_context.sandbox_root).parent.to_s}/Podfile.lock"

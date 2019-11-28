@@ -1,4 +1,5 @@
 require_relative '../tool/tool'
+require 'set'
 
 module Pod
     class Prebuild
@@ -67,7 +68,7 @@ module Pod
             ]
 
             class_attr_accessor :devpodWhiteList
-            self.devpodWhiteList = [
+            self.devpodWhiteList = Set[
                 'ExpressModule',
                 'JobFlowData',
 

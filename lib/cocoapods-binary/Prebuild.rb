@@ -106,6 +106,7 @@ module Pod
         # Build the needed framework files
         def prebuild_frameworks!
             UI.puts "Start prebuild_frameworks"
+            starting = Process.clock_gettime(Process::CLOCK_MONOTONIC)
 
             # build options
             sandbox_path = sandbox.root
@@ -273,6 +274,10 @@ module Pod
             deletedTargetNames = useless_target_names.map { |i| "#{i}" }
             Pod::UI.puts "Targets to cleanup: #{deletedTargetNames}"
             write_delta_file(updatedTargetNames, deletedTargetNames)
+
+            ending = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+            elapsed = ending - starting
+            puts "PREBUILD TIME: #{elapsed}"
         end
 
 
