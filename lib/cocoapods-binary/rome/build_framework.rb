@@ -40,9 +40,12 @@ def build_for_iosish_platform(sandbox,
   device_framework_path = "#{build_dir}/#{CONFIGURATION}-#{device}/#{target_name}/#{module_name}.framework"
   simulator_framework_path = "#{build_dir}/#{CONFIGURATION}-#{simulator}/#{target_name}/#{module_name}.framework"
 
-  is_succeed, _ = xcodebuild(sandbox, target_label, simulator, deployment_target, other_options + custom_build_options_simulator)
-  exit 1 unless is_succeed
-  
+  if !Dir.exist?(simulator_framework_path)
+    is_succeed, _ = xcodebuild(sandbox, target_label, simulator, deployment_target, other_options + custom_build_options_simulator)
+    exit 1 unless is_succeed
+  else
+    puts "Sim framework already exist at: #{simulator_framework_path}"
+  end
   if enable_device_build
     is_succeed, _ = xcodebuild(sandbox, target_label, device, deployment_target, other_options + custom_build_options)
     exit 1 unless is_succeed
