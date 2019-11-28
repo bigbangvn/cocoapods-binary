@@ -65,6 +65,7 @@ module Pod
             'HydraSwift', # It's prebuilt lib, but was accidentally included when dev pod binary is enabled
              #'Stubber', # Problem with UI tests
              #'MGActionLiveness' # It includes static lib -> cause duplicate
+             'LoginModule' # It's static now -> empbeded in main target -> can't gather codecoverage because wrong symbol path
             ]
 
             class_attr_accessor :devpodWhiteList
